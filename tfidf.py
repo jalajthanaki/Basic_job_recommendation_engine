@@ -86,10 +86,61 @@ for i in range(num_category):
         for d in range(len(all_resumes[i][j])):
             all_resumes[i][j][d] = all_resumes[i][j][d].lower().replace(companies[j], '')
 
+
+
+#########################################################################
+# the naive TF-IDF
+#########################################################################
+
+score_matrix = [[0 for i in range(num_company)] for j in range(num_company)]
+correct = 0.0
+total = 0.0
+
+train_set = []
+for c in range(num_company):
+    doc = ''
+    for i in range(num_category):
+        for d in range(train1_size):
+            doc = doc + all_resumes[c][d][i]
+    train_set.append(doc)
+
+tfidf_vectorizer = TfidfVectorizer()
+tfidf_matrix_train = tfidf_vectorizer.fit_transform(train_set)
+
+print "--------- Simple TF-IDF approach----------"
+for c in range(num_company):
+    #print c
+    for d in range(test_size):
+
+        doc = ''
+
+        for i in range(num_category):
+            idx = train1_size + train2_size + d
+            doc = doc + all_resumes[c][idx][0]
+
+        response = tfidf_vectorizer.transform([doc])
+        sim = cosine_similarity(response, tfidf_matrix_train)
+        final_score = sim[0]
+        print "Cosine similarity", final_score
+
+        # cur_max = -1
+        # max_index = 0
+        # for j in range(num_company):
+        #     if final_score[j] > cur_max:
+        #         cur_max = final_score[j]
+        #         max_index = j
+        # total = total + 1
+        # if max_index == c:
+        #     correct = correct + 1
+
+# print ""
+# print 'Naive tf-idf score: ' + str(correct / total)
+
+
 ##################################################################################
 # weighted categorical TF-IDF
 ##################################################################################
-
+print "------- Weighted TF-IDF----------"
 score_matrix = [[0 for i in range(num_company)] for j in range(num_company)]
 tfidfs = []
 tfidf_trains = []
@@ -124,6 +175,8 @@ for i in range(num_category):
 
 score_matrix = my_normalize(score_matrix)
 score_matrix = my_col_normalize(score_matrix)
+print score_matrix
+
 
 for i in range(num_category):
     for j in range(num_company):
@@ -145,8 +198,8 @@ for c in range(num_company):
             sim = cosine_similarity(response, tfidf_trains[i])
             score = sim[0]
             test_matrix[i] = score
-
-        # 		test_matrix = my_normalize(test_matrix)
+            test_matrix = my_normalize(test_matrix)
+        #print test_matrix
 
         final_score = []
         for j in range(num_company):
@@ -166,52 +219,5 @@ for c in range(num_company):
         total = total + 1
         if max_index == c:
             correct = correct + 1
-print ""
-print 'weighted categorical TF-IDF: ' + str(correct * 1.0 / total)
-
-#########################################################################
-# the naive TF-IDF
-#########################################################################
-
-score_matrix = [[0 for i in range(num_company)] for j in range(num_company)]
-
-correct = 0.0
-total = 0.0
-
-train_set = []
-for c in range(num_company):
-    doc = ''
-    for i in range(num_category):
-        for d in range(train1_size):
-            doc = doc + all_resumes[c][d][i]
-    train_set.append(doc)
-
-tfidf_vectorizer = TfidfVectorizer()
-tfidf_matrix_train = tfidf_vectorizer.fit_transform(train_set)
-
-for c in range(num_company):
-
-    for d in range(test_size):
-
-        doc = ''
-
-        for i in range(num_category):
-            idx = train1_size + train2_size + d
-            doc = doc + all_resumes[c][idx][0]
-
-        response = tfidf_vectorizer.transform([doc])
-        sim = cosine_similarity(response, tfidf_matrix_train)
-        final_score = sim[0]
-
-        cur_max = -1
-        max_index = 0
-        for j in range(num_company):
-            if final_score[j] > cur_max:
-                cur_max = final_score[j]
-                max_index = j
-        total = total + 1
-        if max_index == c:
-            correct = correct + 1
-
-print ""
-print 'Naive tf-idf score: ' + str(correct / total)
+# print ""
+# print 'weighted categorical TF-IDF: ' + str(correct * 1.0 / total)
